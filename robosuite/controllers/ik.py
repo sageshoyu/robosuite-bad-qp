@@ -506,6 +506,29 @@ class InverseKinematicsController(JointVelocityController):
 
         return arm_joint_pos
 
+    def joint_pos_abs_ee(self, pos, rotation, update_targets=False):
+        """
+        Like above but takes mujoco world-frame pos and rotation matrix. 
+        """
+
+        # Calculate the rotation
+        # This equals: inv base offset * eef * offset accounting for deviation between mujoco eef and pybullet eef
+        rotation = self.base_orn_offset_inv @ rotation @ self.rotation_offset[:3, :3]
+
+        # Determine targets
+        targets = (pos + self.ik_robot_target_pos_offset, T.mat2quat(rotation))
+
+        # convert from target pose in base frame to target pose in bullet world frame
+        world_targets = self.bullet_base_pose_to_world_pose(targets)
+
+        # Converge to IK solution
+        arm_joint_pos = None
+        for bullet_i in range(self.converge_steps):
+            arm_joint_pos = self.inverse_kinematics(world_targets[0], world_targets[1])
+            self.sync_ik_robot(arm_joint_pos, sync_last=True)
+
+        return arm_joint_pos
+
     def bullet_base_pose_to_world_pose(self, pose_in_base):
         """
         Convert a pose in the base frame to a pose in the world frame.
