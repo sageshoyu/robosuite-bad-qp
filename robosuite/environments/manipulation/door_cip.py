@@ -104,7 +104,7 @@ class DoorCIP(Door):
         self.early_termination = early_termination
         self.penalize_collisions = penalize_collisions
 
-        self.myIK = None
+        self.IK = None
 
         # super init 
         super().__init__(robots,
@@ -141,22 +141,25 @@ class DoorCIP(Door):
         ik_config.pop("input_min", None)
         ik_config.pop("output_max", None)
         ik_config.pop("output_min", None)
-        self.myIK = controller_factory("IK_POSE", ik_config)
+        self.IK = controller_factory("IK_POSE", ik_config)
 
 
     def _reset_internal(self):
 
-        super()._reset_internal() 
+        super()._reset_internal()
+        self.sim.forward()
 
         if self.ee_fixed_to_handle:
 
             self._setup_ik()
 
+            # get ee pose
             ee_pos = self.robots[0].controller.ee_pos
             ee_ori_mat = self.robots[0].controller.ee_ori_mat
             ee_quat = T.mat2quat(ee_ori_mat)
             ee_in_world = T.pose2mat((ee_pos, ee_quat))
             
+            # get pose of handle site, door 
             site_pos = self.sim.data.site_xpos[self.door_handle_site_id] 
             site_ori_mat = self.sim.data.site_xmat[self.door_handle_site_id]
             site_ori_mat = np.array(site_ori_mat).reshape(3,3)
@@ -164,13 +167,23 @@ class DoorCIP(Door):
             door_body_id = self.sim.model.body_name2id(self.door.root_body)
             door_quat = self.sim.model.body_quat[door_body_id]
             door_ori_mat = T.quat2mat(door_quat)
-            target_ori_mat = ee_ori_mat 
+            
+            # compute target
+            target_pos = site_pos
+            R_x = T.rotation_matrix(-np.pi/2, np.array([1,0,0]))[:3,:3] 
+            R_z = T.rotation_matrix(-np.pi/2, np.array([0,0,1]))[:3,:3]
+            target_ori_mat = door_ori_mat @ R_x @ R_z 
 
-            qpos = self.myIK.joint_pos_abs_ee(site_pos, target_ori_mat)
+            # ik 
+            qpos = self.IK.ik(target_pos, target_ori_mat)
 
+            # update sim 
             self.sim.data.qpos[:7] = qpos
             self.robots[0].init_qpos = qpos
             self.robots[0].initialization_noise['magnitude'] = 0.0
+
+
+                
 
         
 

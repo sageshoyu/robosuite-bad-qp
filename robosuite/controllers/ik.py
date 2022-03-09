@@ -506,7 +506,7 @@ class InverseKinematicsController(JointVelocityController):
 
         return arm_joint_pos
 
-    def joint_pos_abs_ee(self, pos, rotation, update_targets=False):
+    def ik(self, pos, rotation, update_targets=False):
         """
         Like above but takes mujoco world-frame pos and rotation matrix. 
         """
