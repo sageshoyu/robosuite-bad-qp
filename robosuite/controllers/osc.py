@@ -270,9 +270,7 @@ class OperationalSpaceController(Controller):
 
         if self.interpolator_ori is not None:
             self.ori_ref = np.array(self.ee_ori_mat)  # reference is the current orientation at start
-            self.interpolator_ori.set_goal(
-                orientation_error(self.goal_ori, self.ori_ref)
-            )  # goal is the total orientation error
+            self.interpolator_ori.set_goal(T.mat2quat(self.goal_ori)) # set goal properly
             self.relative_ori = np.zeros(3)  # relative orientation always starts at 0
 
     def run_controller(self):
@@ -306,7 +304,8 @@ class OperationalSpaceController(Controller):
             # relative orientation based on difference between current ori and ref
             self.relative_ori = orientation_error(self.ee_ori_mat, self.ori_ref)
 
-            ori_error = self.interpolator_ori.get_interpolated_goal()
+            desired_ori = self.interpolator_ori.get_interpolated_goal()
+            ori_error = orientation_error(desired_ori, self.ee_ori_mat)
         else:
             desired_ori = np.array(self.goal_ori)
             ori_error = orientation_error(desired_ori, self.ee_ori_mat)
@@ -377,9 +376,7 @@ class OperationalSpaceController(Controller):
 
         if self.interpolator_ori is not None:
             self.ori_ref = np.array(self.ee_ori_mat)  # reference is the current orientation at start
-            self.interpolator_ori.set_goal(
-                orientation_error(self.goal_ori, self.ori_ref)
-            )  # goal is the total orientation error
+            self.interpolator_ori.set_goal(T.mat2quat(self.goal_ori)) # goal is goal 
             self.relative_ori = np.zeros(3)  # relative orientation always starts at 0
 
     @property

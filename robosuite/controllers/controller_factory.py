@@ -124,7 +124,7 @@ def controller_factory(name, params):
         if interpolator is not None:
             interpolator.set_states(dim=3)  # EE control uses dim 3 for pos and ori each
             ori_interpolator = deepcopy(interpolator)
-            ori_interpolator.set_states(ori="euler")
+            ori_interpolator.set_states(ori="quat")
         params["control_ori"] = True
         return OperationalSpaceController(interpolator_pos=interpolator, interpolator_ori=ori_interpolator, **params)
 
