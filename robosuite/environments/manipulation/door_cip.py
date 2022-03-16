@@ -4,13 +4,6 @@ from robosuite.environments.manipulation.door import Door
 from robosuite.controllers import controller_factory
 import robosuite.utils.transform_utils as T
 
-import pybullet as p 
-
-# Default DoorWithObstacles configuration
-INITIAL_JOINTS = [3.186, 4.171, -0.019, 1.404, 1.544, 4.559, -4.437]
-# INITIAL_JOINTS = [3.279,3.911,0.611,1.731,-0.435,4.195,-2.714]
-
-
 DEFAULT_DOOR_CONFIG = {
     # rewards and penalties
     "action_delta_penalty": 0,
@@ -36,7 +29,6 @@ DEFAULT_DOOR_CONFIG = {
     # file/env config
     "print_results": False,
     "ee_fixed_to_handle": True,
-    "num_obstacles": 2
 }
 
 
