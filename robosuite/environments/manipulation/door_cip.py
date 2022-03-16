@@ -85,7 +85,6 @@ class DoorCIP(Door):
         self.max_hinge_vel = task_config["max_hinge_vel"]
         self.print_results = task_config["print_results"]
         self.ee_fixed_to_handle = task_config["ee_fixed_to_handle"]
-        self.num_obstacles = task_config["num_obstacles"]
 
         self.collisions = 0
         self.joint_limits = 0
@@ -173,6 +172,61 @@ class DoorCIP(Door):
             self.sim.data.qpos[:7] = qpos
             self.robots[0].init_qpos = qpos
             self.robots[0].initialization_noise['magnitude'] = 0.0
+
+
+    def reward(self, action=None):
+        """
+        Reward function for the task. 
+        Modified from superclass so as to add dense reward on the hinge qpos as well. 
+
+        Sparse un-normalized reward:
+
+            - a discrete reward of 1.0 is provided if the door is opened
+
+        Un-normalized summed components if using reward shaping:
+
+            - Reaching: in [0, 0.25], proportional to the distance between door handle and robot arm
+            - Rotating: in [0, 0.25], proportional to angle rotated by door handled
+              - Note that this component is only relevant if the environment is using the locked door version
+
+        Note that a successfully completed task (door opened) will return 1.0 irregardless of whether the environment
+        is using sparse or shaped rewards
+
+        Note that the final reward is normalized and scaled by reward_scale / 1.0 as
+        well so that the max score is equal to reward_scale
+
+        Args:
+            action (np.array): [NOT USED]
+
+        Returns:
+            float: reward value
+        """
+        reward = 0.0
+
+        # sparse completion reward
+        if self._check_success():
+            reward = 1.0
+
+        # else, we consider only the case if we're using shaped rewards
+        elif self.reward_shaping:
+            # Add reaching component
+            dist = np.linalg.norm(self._gripper_to_handle)
+            reaching_reward = 0.25 * (1 - np.tanh(10.0 * dist))
+            reward += reaching_reward
+            # Add rotating component if we're using a locked door
+            if self.use_latch:
+                handle_qpos = self.sim.data.qpos[self.handle_qpos_addr]
+                reward += np.clip(0.25 * np.abs(handle_qpos / (0.5 * np.pi)), -0.25, 0.25)
+
+            # add hinge qpos component 
+            hinge_qpos = self.sim.data.qpos[self.hinge_qpos_addr]
+            reward += np.clip(hinge_qpos, 0, 0.5)
+
+        # Scale reward if requested
+        if self.reward_scale is not None:
+            reward *= self.reward_scale / 1.0
+
+        return reward
 
 
                 
