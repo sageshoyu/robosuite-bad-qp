@@ -326,9 +326,13 @@ class SingleArm(Manipulator):
             def left_tip_site_force(obs_cache):
                 return np.array(self.left_tip_force)
 
+            @sensor(modality=modality)
+            def right_tip_site_force(obs_cache):
+                return np.array(self.right_tip_force)
 
-            sensors += [gripper_qpos, gripper_qvel, left_tip_site_force]
-            names += [f"{pf}gripper_qpos", f"{pf}gripper_qvel", f"{pf}left_tip_force"]
+
+            sensors += [gripper_qpos, gripper_qvel, left_tip_site_force, right_tip_site_force]
+            names += [f"{pf}gripper_qpos", f"{pf}gripper_qvel", f"{pf}left_tip_force",  f"{pf}right_tip_force"]
 
         # Create observables for this robot
         for name, s in zip(names, sensors):
@@ -382,6 +386,15 @@ class SingleArm(Manipulator):
             np.array: force applied at the force sensor at the robot arm's eef
         """
         return self.get_sensor_measurement("gripper0_left_tip_force")
+
+
+    @property
+    def right_tip_force(self):
+        """
+        Returns:
+            np.array: force applied at the force sensor at the robot arm's eef
+        """
+        return self.get_sensor_measurement("gripper0_right_tip_force")
 
 
     @property
