@@ -128,6 +128,7 @@ class OperationalSpaceController(Controller):
         control_ori=True,
         control_delta=True,
         uncouple_pos_ori=True,
+        scale_stiffness=False,
         **kwargs,  # does nothing; used so no error raised when dict is passed with extra terms used previously
     ):
 
@@ -171,6 +172,9 @@ class OperationalSpaceController(Controller):
 
         # Impedance mode
         self.impedance_mode = impedance_mode
+
+        # scale stiffness action [-1,1] to [kp_min, kp_max]
+        self.scale_stiffness = scale_stiffness
 
         # Add to control dim based on impedance_mode
         if self.impedance_mode == "variable":
@@ -226,6 +230,10 @@ class OperationalSpaceController(Controller):
             self.kd = 2 * np.sqrt(self.kp) * np.clip(damping_ratio, self.damping_ratio_min, self.damping_ratio_max)
         elif self.impedance_mode == "variable_kp":
             kp, delta = action[:6], action[6:]
+            
+            if self.scale_stiffness:
+                kp = 0.5 * (kp + 1) * (self.kp_max - self.kp_min) + self.kp_min
+                
             self.kp = np.clip(kp, self.kp_min, self.kp_max)
             self.kd = 2 * np.sqrt(self.kp)  # critically damped
         else:  # This is case "fixed"
@@ -399,8 +407,12 @@ class OperationalSpaceController(Controller):
             low = np.concatenate([self.damping_ratio_min, self.kp_min, self.input_min])
             high = np.concatenate([self.damping_ratio_max, self.kp_max, self.input_max])
         elif self.impedance_mode == "variable_kp":
-            low = np.concatenate([self.kp_min, self.input_min])
-            high = np.concatenate([self.kp_max, self.input_max])
+            if self.scale_stiffness:
+                low = np.concatenate([self.nums2array(-1,6), self.input_min])
+                high = np.concatenate([self.nums2array(1,6), self.input_max])
+            else:
+                low = np.concatenate([self.kp_min, self.input_min])
+                high = np.concatenate([self.kp_max, self.input_max])
         else:  # This is case "fixed"
             low, high = self.input_min, self.input_max
         return low, high
