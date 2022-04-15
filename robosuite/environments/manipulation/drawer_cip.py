@@ -14,7 +14,7 @@ from robosuite.utils.mjcf_utils import array_to_string, string_to_array, xml_pat
 from robosuite.environments.manipulation.cip_env import CIP
 
 
-class Drawer(SingleArmEnv, CIP):
+class DrawerCIP(SingleArmEnv, CIP):
     """
     This class corresponds to the drawer opening task for a single robot arm.
 
@@ -241,10 +241,6 @@ class Drawer(SingleArmEnv, CIP):
             dist = np.linalg.norm(self._gripper_to_handle)
             reaching_reward = 0.25 * (1 - np.tanh(10.0 * dist))
             reward += reaching_reward
-            # Add rotating component if we're using a locked drawer
-            if self.use_latch:
-                handle_qpos = self.sim.data.qpos[self.handle_qpos_addr]
-                reward += np.clip(0.25 * np.abs(handle_qpos / (0.5 * np.pi)), -0.25, 0.25)
 
         # Scale reward if requested
         if self.reward_scale is not None:
