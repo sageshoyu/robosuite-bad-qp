@@ -171,8 +171,6 @@ class DoorCIP(Door):
             # update sim 
             self.sim.data.qpos[:7] = qpos
             self.robots[0].init_qpos = qpos
-            self.robots[0].initialization_noise['magnitude'] = 0.0
-
 
     def reward(self, action=None):
         """

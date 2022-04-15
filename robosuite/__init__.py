@@ -11,12 +11,15 @@ from robosuite.environments.manipulation.two_arm_lift import TwoArmLift
 from robosuite.environments.manipulation.two_arm_peg_in_hole import TwoArmPegInHole
 from robosuite.environments.manipulation.two_arm_handover import TwoArmHandover
 
+from robosuite.environments.manipulation.door_cip import DoorCIP
+from robosuite.environments.manipulation.drawer import Drawer
+
 from robosuite.environments import ALL_ENVIRONMENTS
 from robosuite.controllers import ALL_CONTROLLERS, load_controller_config
 from robosuite.robots import ALL_ROBOTS
 from robosuite.models.grippers import ALL_GRIPPERS
 
-from robosuite.environments.manipulation.door_cip import DoorCIP
+
 
 __version__ = "1.3.1"
 __logo__ = """
