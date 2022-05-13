@@ -248,6 +248,26 @@ class DrawerCIP(SingleArmEnv, CIP):
 
         return reward
 
+    def _post_action(self, action):
+        reward, done, info = super()._post_action(action)
+
+        # make sure the gripper stays closed
+        # self.robots[0].grip_action(self.robots[0].gripper, [-1.0])
+
+        # if terminating prematurely, signal episode end
+        # if self._check_terminated():
+        # if self.terminated:
+        #     done = self.early_termination
+
+        # # record collision and joint_limit info for logging
+        # info["collisions"] = self.collisions
+        # info["joint_limits"] = self.joint_limits
+        # info['task_complete'] = self.sim.data.qpos[self.hinge_qpos_addr]
+        # info["collision_forces"] = self.col_mags
+
+        info["success"] = self._check_success()
+        return reward, done, info
+
     def _load_model(self):
         """
         Loads an xml model, puts it in self.model
