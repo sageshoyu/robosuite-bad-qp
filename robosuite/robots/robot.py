@@ -286,6 +286,13 @@ class Robot(object):
         return low, high
 
     @property
+    def joint_limits(self):
+        low = self.sim.model.jnt_range[self._ref_joint_indexes, 0]
+        high = self.sim.model.jnt_range[self._ref_joint_actuator_indexes, 1]
+
+        return low, high
+
+    @property
     def action_dim(self):
         """
         Action space dimension for this robot

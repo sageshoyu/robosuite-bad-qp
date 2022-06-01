@@ -247,6 +247,8 @@ class SingleArm(Manipulator):
         # Now run the controller for a step
         torques = self.controller.run_controller()
 
+        # TODO: this is where we can implement CBF intervention controller
+
         # Clip the torques
         low, high = self.torque_limits
         self.torques = np.clip(torques, low, high)
