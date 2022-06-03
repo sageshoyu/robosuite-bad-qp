@@ -92,6 +92,9 @@ class Controller(object, metaclass=abc.ABCMeta):
         self.initial_ee_pos = self.ee_pos
         self.initial_ee_ori_mat = self.ee_ori_mat
 
+        self.joint_lower_limit = self.sim.model.jnt_range[joint_indexes, 0]
+        self.joint_upper_limit = self.sim.model.jnt_range[joint_indexes, 1]
+
     @abc.abstractmethod
     def run_controller(self):
         """
