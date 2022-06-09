@@ -1,7 +1,9 @@
 import osqp
 import numpy as np
-import scipy as sp
+import scipy
 from scipy import sparse
+
+# NOTE: this code does not work due to improper modeling of torques in contact with the robot arm
 
 
 # Generate problem data
@@ -25,25 +27,25 @@ class JointLimitCBFSolver():
 
     def compute_safe_osc_output(self, q, qd, qdd, g, u_pi):
         f = np.concatenate([qd, qdd])
-        g = sparse.vstack([sparse.csc_matrix((7, 7)), g])
+
+        # this is a slight variant, since joint space are 'generalized' coordinates for the system
+        #
+        g = np.vstack([np.zeros((7, 6)), g])
 
         # compute CBF h(x) and \partial h / \partial x
         h = -(q - self.ll) * (q - self.ul)
-        dh_dx = np.concatenate([-(2 * q - (self.ul + self.ll)), -2 * np.ones(7)])
-
+        dh_dx = np.diag(-(2 * q - (self.ul + self.ll)))
         # compute lie derivatives (but since this is R^n, they are directional derivs)
         Lf_h = np.dot(dh_dx, f)  # since the velocity of the system is f (dynamics)
         Lg_h = np.dot(dh_dx, g)  # affine control transformation
 
-        P = sparse.block_diag([sparse.csc_matrix((6, 6)), sparse.eye(6)], format='csc')
+        P = scipy.linalg.block_diag(np.zeros((6, 6)), np.eye(6))
         c = np.zeros(6 + 6)
-        A = sparse.vstack([
-            sparse.hstack([sparse.eye(6), -sparse.eye(6)]),
-            sparse.hstack([
-                sparse.vstack([Lg_h, sparse.csc_matrix((5, 6))]),
-                sparse.csc_matrix((6, 6))])], format='csc')
+        A = np.vstack([
+            np.hstack([np.eye(6), -np.eye(6)]),
+            np.hstack([Lg_h, np.zeros((14, 6))])])
         l = np.hstack([u_pi, -self.gamma * h - Lf_h])
-        u = np.hstack([u_pi, np.inf])
+        u = np.hstack([u_pi, np.inf * np.ones(7)])
 
         # Create an OSQP object
         prob = osqp.OSQP()

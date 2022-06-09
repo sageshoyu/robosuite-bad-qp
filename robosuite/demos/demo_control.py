@@ -59,7 +59,8 @@ if __name__ == "__main__":
     print(suite.__logo__)
 
     # Choose environment and add it to options
-    options["env_name"] = choose_environment()
+    # options["env_name"] = choose_environment()
+    options["env_name"] = "Stack"
 
     # If a multi-arm environment has been chosen, choose configuration and appropriate robot(s)
     if "TwoArm" in options["env_name"]:
@@ -81,13 +82,15 @@ if __name__ == "__main__":
 
     # Else, we simply choose a single (single-armed) robot to instantiate in the environment
     else:
-        options["robots"] = choose_robots(exclude_bimanual=True)
+        # options["robots"] = choose_robots(exclude_bimanual=True)
+        options["robots"] = "Panda"
 
     # Hacky way to grab joint dimension for now
     joint_dim = 6 if options["robots"] == "UR5e" else 7
 
     # Choose controller
-    controller_name = choose_controller()
+    # controller_name = choose_controller()
+    controller_name = "OSC_POSE"
 
     # Load the desired controller
     options["controller_configs"] = suite.load_controller_config(default_controller=controller_name)

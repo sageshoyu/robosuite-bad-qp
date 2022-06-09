@@ -1,11 +1,13 @@
 import math
 
 import numpy as np
+import scipy
 
 import robosuite.utils.transform_utils as T
 from robosuite.controllers.base_controller import Controller
 from robosuite.controllers.osc_qp_cbf import JointLimitCBFSolver
 from robosuite.utils.control_utils import *
+from mujoco_py import functions
 
 # Supported impedance modes
 IMPEDANCE_MODES = {"fixed", "variable", "variable_kp"}
@@ -130,7 +132,7 @@ class OperationalSpaceController(Controller):
         control_delta=True,
         uncouple_pos_ori=True,
         scale_stiffness=False,
-        joint_limit_cbf=False,
+        joint_limit_cbf=True,
         **kwargs,  # does nothing; used so no error raised when dict is passed with extra terms used previously
     ):
 
@@ -354,22 +356,27 @@ class OperationalSpaceController(Controller):
             decoupled_force = np.dot(lambda_pos, desired_force)
             decoupled_torque = np.dot(lambda_ori, desired_torque)
             decoupled_wrench = np.concatenate([decoupled_force, decoupled_torque])
-
-            B = np.vstack([lambda_pos, lambda_ori])
+            print(lambda_pos)
+            print(lambda_ori)
+            B = scipy.linalg.block_diag(lambda_pos, lambda_ori)
+            print('uncoupling')
+            print(B)
         else:
             desired_wrench = np.concatenate([desired_force, desired_torque])
             decoupled_wrench = np.dot(lambda_full, desired_wrench)
 
             B = lambda_full
+            print('no uncouplin')
+            print(B)
 
         if self.joint_limit_cbf:
             q = self.joint_pos
             qd = self.joint_vel
-            self.sim.mj_inverse()
+            functions.mj_inverse(self.sim.model, self.sim.data)
             tau = self.sim.data.qfrc_inverse[self.qpos_index]
-            mm_inv = np.inv(self.mass_matrix)
+            mm_inv = np.linalg.inv(self.mass_matrix)
             qdd = np.dot(mm_inv, tau)
-            g = np.dot(mm_inv, B)
+            g = np.dot(mm_inv, np.dot(self.J_full.T, B))
             decoupled_wrench = self.joint_cbf_solver.compute_safe_osc_output(q, qd, qdd, g, decoupled_wrench)
 
 
