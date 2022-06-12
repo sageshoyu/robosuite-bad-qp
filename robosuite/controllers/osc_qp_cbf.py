@@ -34,8 +34,8 @@ class JointLimitCBFSolver():
 
     def __init__(self, lower_limits, upper_limits, gamma=1.0):
         self.ll = lower_limits
-        self.ul = upper_limits
-        self.gamma = gamma
+        self.ul = upper_limits # (both of shape (7,)
+        self.gamma = gamma  # for proportional class K function (see Ames above)
         self.prob = osqp.OSQP()
         self.init_problem = False
 
@@ -53,6 +53,19 @@ class JointLimitCBFSolver():
         Lf_h = np.dot(dh_dx, f)  # since the velocity of the system is f (dynamics)
         Lg_h = np.dot(dh_dx, g)  # affine control transformation
 
+        # in addition to these, we need to compute the following terms
+        # Lf^2_h (lie derivative of h twice in the direction of f)
+        # LgLf (lie derivative of h first in direction of f then in direction of g)
+        # Here are the expressions written out in basic calculus:
+        
+        # Lf^2_h
+        # \sum_j f_j (\sum_i \frac{del f_i}{del x_j} x \frac{del h}{\del x_i} + f_i \frac{del h}{x_j x_i}
+        # we have {del h}{del x_i} in dh_dx. we need{del f_i}{del x_j} (derivative of ith coord of f with respect to joint variable j}{
+        # LgLf_h
+        # \sum_j g_j (same summation mess indexed by i for Lf^2_h)
+       
+    
+        
         P = scipy.linalg.block_diag(np.zeros((6, 6)), np.eye(6))
         c = np.zeros(6 + 6)
         A = np.vstack([
