@@ -5,6 +5,20 @@ from scipy import sparse
 
 # NOTE: this code does not work due to improper modeling of torques in contact with the robot arm
 
+# To get this code working without contact torques, we need to extend the CBF formalism to accomodate
+# systems where the control input is two derivatives away from the state variable. We use
+# exponential barrier functions from this CBF review paper: https://arxiv.org/abs/1903.11199
+
+# This code uses OSQP to solve a quadratic program to compute the safe torque and was based off
+# of an example script in the docs: https://osqp.org/docs/examples/least-squares.html
+# For ease of debugging, I converted all the sparse linear algebra operations into normal explicit
+# numpy operations. We are solving a problem of dimensionality-14, which, for these solvers, is pretty
+# small, but in case you need a speed up, you can use the original script as a guide of where
+# to re-substitute the scipy.linalg.sparse operations.
+
+
+
+
 
 # Generate problem data
 # sp.random.seed(1)
