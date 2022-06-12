@@ -73,6 +73,9 @@ class JointLimitCBFSolver():
             np.hstack([Lg_h, np.zeros((14, 6))])])
         l = np.hstack([u_pi, -self.gamma * h - Lf_h])
         u = np.hstack([u_pi, np.inf * np.ones(7)])
+        # then, modify this constraint here to respect the exponential ZBF:
+        # currently, we respect the constraint Lf_h + Lg_h u + \gamma h(x) \geq 0
+        # now we need to replace that with Lf^2_h + LfLg_h u + (gamma, gamma) \dot (h(x), Lfh) \geq 0.
 
         # Create an OSQP object
         prob = osqp.OSQP()
